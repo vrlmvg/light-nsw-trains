@@ -23,16 +23,42 @@ endorsed by Transport for NSW.
 
 ## Getting an API key
 
-The tool needs your own free API key. It takes a few minutes, and the key stays on your phone.
+The tool needs your own free API key. It takes a few minutes, and the key stays on your phone. The same steps are
+in the tool under **Settings → No key yet?**
 
 1. Sign up at [opendata.transport.nsw.gov.au](https://opendata.transport.nsw.gov.au).
 2. Create an application and add the **Trip Planner APIs** and the **Public Transport - Realtime Vehicle
    Positions** APIs to it.
 3. Copy the application's API key.
+4. Turn the key into a QR code on your computer (see below).
+5. In the tool, open **Settings → Scan API key** and point the phone at the QR code on your screen.
 
-The key is long, so you don't have to type it. On a computer, turn it into a QR code that contains only the key,
-for example with `qrencode -t ansiutf8 'YOUR_KEY'` in a terminal. (Avoid online QR generators: they would see your
-key.) Then in the tool open **Settings → Scan API key** and point the phone at the screen.
+<img src="screenshots/5-key-help.png" width="200" alt="Key setup steps in the tool">
+
+### Turning the key into a QR code
+
+The key is too long to type comfortably, so the tool scans it from a QR code. The QR code must contain only the
+key. Make it on your own computer: an online QR generator would get a copy of your key.
+
+**macOS** (with [Homebrew](https://brew.sh)) or **Linux**: install `qrencode`
+(`brew install qrencode`, `sudo apt install qrencode` or `sudo dnf install qrencode`), then run
+
+```sh
+qrencode -t ansiutf8 'YOUR_KEY'
+```
+
+The QR code appears right in the terminal. If it's too big for the window, make the terminal font smaller.
+
+**Windows, macOS or Linux with Python**: run
+
+```sh
+pip install qrcode
+qr 'YOUR_KEY'
+```
+
+On Windows, use double quotes instead: `qr "YOUR_KEY"`.
+
+You can also type the key in **Settings → Transport for NSW API key** if you prefer.
 
 ## Install
 

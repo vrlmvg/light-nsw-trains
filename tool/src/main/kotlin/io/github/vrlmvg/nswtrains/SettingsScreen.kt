@@ -119,6 +119,12 @@ class SettingsScreen(
         }
     }
 
+    private fun showKeyHelp() {
+        navigateTo(screenFactory = { KeyHelpScreen(it) }) { scanNow ->
+            if (scanNow) scanKey()
+        }
+    }
+
     @Composable
     override fun Content() {
         val apiKey by viewModel.apiKey.collectAsState()
@@ -166,6 +172,11 @@ class SettingsScreen(
                             label = "Scan API key",
                             value = "From QR code",
                             onClick = ::scanKey,
+                        )
+                        SettingRow(
+                            label = "No key yet?",
+                            value = "How to get one",
+                            onClick = ::showKeyHelp,
                         )
                         SettingRow(
                             label = "Show",
