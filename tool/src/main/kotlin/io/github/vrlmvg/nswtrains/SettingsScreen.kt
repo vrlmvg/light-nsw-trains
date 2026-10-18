@@ -120,9 +120,7 @@ class SettingsScreen(
     }
 
     private fun showKeyHelp() {
-        navigateTo(screenFactory = { KeyHelpScreen(it) }) { scanNow ->
-            if (scanNow) scanKey()
-        }
+        navigateTo(screenFactory = { KeyHelpScreen(it) })
     }
 
     @Composable
@@ -192,6 +190,7 @@ class SettingsScreen(
                     ) {
                         LightText(
                             text = "Get a free key at opendata.transport.nsw.gov.au\n" +
+                                "You can also enter your key via the Dashboard\n" +
                                 "Timetable data © Transport for NSW",
                             variant = LightTextVariant.Fine,
                             align = TextAlign.Center,

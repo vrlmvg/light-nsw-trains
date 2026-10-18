@@ -30,35 +30,10 @@ in the tool under **Settings → No key yet?**
 2. Create an application and add the **Trip Planner APIs** and the **Public Transport - Realtime Vehicle
    Positions** APIs to it.
 3. Copy the application's API key.
-4. Turn the key into a QR code on your computer (see below).
-5. In the tool, open **Settings → Scan API key** and point the phone at the QR code on your screen.
+4. Paste it into the Dashboard on your computer, or enter it in the tool under
+   **Settings → Transport for NSW API key**.
 
 <img src="screenshots/5-key-help.png" width="200" alt="Key setup steps in the tool">
-
-### Turning the key into a QR code
-
-The key is too long to type comfortably, so the tool scans it from a QR code. The QR code must contain only the
-key. Make it on your own computer: an online QR generator would get a copy of your key.
-
-**macOS** (with [Homebrew](https://brew.sh)) or **Linux**: install `qrencode`
-(`brew install qrencode`, `sudo apt install qrencode` or `sudo dnf install qrencode`), then run
-
-```sh
-qrencode -t ansiutf8 'YOUR_KEY'
-```
-
-The QR code appears right in the terminal. If it's too big for the window, make the terminal font smaller.
-
-**Windows, macOS or Linux with Python**: run
-
-```sh
-pip install qrcode
-qr 'YOUR_KEY'
-```
-
-On Windows, use double quotes instead: `qr "YOUR_KEY"`.
-
-You can also type the key in **Settings → Transport for NSW API key** if you prefer.
 
 ## Install
 

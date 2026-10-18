@@ -8,8 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SimpleLightScreen
-import com.thelightphone.sdk.ui.LightBarButton
-import com.thelightphone.sdk.ui.LightBottomBar
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -19,14 +17,11 @@ private val STEPS = listOf(
     "On a computer, sign up at opendata.transport.nsw.gov.au.",
     "Create an application and add the Trip Planner APIs and Public Transport - Realtime Vehicle Positions.",
     "Copy the application's API key.",
-    "Turn the key into a QR code on the computer, without using a website. " +
-        "In a terminal: qrencode -t ansiutf8 'YOUR_KEY'. " +
-        "More ways: github.com/vrlmvg/light-nsw-trains",
-    "Tap SCAN KEY below and point the camera at the QR code.",
+    "Paste it into the Dashboard on your computer, or enter it here in Settings.",
 )
 
-/** How to get a key and scan it as a QR code. Returns true when the user wants to scan now. */
-class KeyHelpScreen(sealedActivity: SealedLightActivity) : SimpleLightScreen<Boolean>(sealedActivity) {
+/** How to get a Transport for NSW API key. */
+class KeyHelpScreen(sealedActivity: SealedLightActivity) : SimpleLightScreen<Unit>(sealedActivity) {
     @Composable
     override fun Content() {
         TrainsTheme {
@@ -45,7 +40,6 @@ class KeyHelpScreen(sealedActivity: SealedLightActivity) : SimpleLightScreen<Boo
                         }
                     }
                 }
-                LightBottomBar(items = listOf(LightBarButton.Text(text = "SCAN KEY", onClick = { goBack(true) })))
             }
         }
     }
