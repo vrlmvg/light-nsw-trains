@@ -119,6 +119,12 @@ class SettingsScreen(
         }
     }
 
+    private fun receiveKeyOverWifi() {
+        navigateTo(screenFactory = { WifiKeyScreen(it) }) { received ->
+            viewModel.saveKey(received)
+        }
+    }
+
     private fun showKeyHelp() {
         navigateTo(screenFactory = { KeyHelpScreen(it) })
     }
@@ -170,6 +176,11 @@ class SettingsScreen(
                             label = "Scan API key",
                             value = "From QR code",
                             onClick = ::scanKey,
+                        )
+                        SettingRow(
+                            label = "Send API key",
+                            value = "From a computer",
+                            onClick = ::receiveKeyOverWifi,
                         )
                         SettingRow(
                             label = "No key yet?",

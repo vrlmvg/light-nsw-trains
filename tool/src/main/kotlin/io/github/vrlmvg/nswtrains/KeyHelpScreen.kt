@@ -17,7 +17,7 @@ private val STEPS = listOf(
     "On a computer, sign up at opendata.transport.nsw.gov.au.",
     "Create an application and add the Trip Planner APIs and Public Transport - Realtime Vehicle Positions.",
     "Copy the application's API key.",
-    "Paste it into the Dashboard on your computer, or enter it here in Settings.",
+    "In Settings, choose Send API key and paste it into the page it shows on your computer, or type it in.",
 )
 
 /** How to get a Transport for NSW API key. */
