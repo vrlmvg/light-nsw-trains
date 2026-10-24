@@ -16,6 +16,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.util.concurrent.TimeUnit
 import kotlin.time.Instant
 
 // Transport for NSW Open Data Trip Planner API:
@@ -44,6 +45,12 @@ class TfnswApi(private val apiKey: suspend () -> String?) {
 
     private val client = HttpClient(OkHttp) {
         expectSuccess = false
+        engine {
+            config {
+                connectTimeout(15, TimeUnit.SECONDS)
+                readTimeout(30, TimeUnit.SECONDS)
+            }
+        }
     }
 
     suspend fun findStops(query: String, filter: TransportFilter): List<StopResult> {

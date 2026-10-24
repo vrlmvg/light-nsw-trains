@@ -4,6 +4,7 @@ import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.Inet4Address
+import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.ServerSocket
 import java.net.Socket
@@ -17,6 +18,8 @@ private const val MAX_WRONG_CODES = 5
 private const val MAX_HEADER_BYTES = 8 * 1024
 private const val MAX_BODY_BYTES = 8 * 1024
 private const val SOCKET_TIMEOUT_MS = 15_000
+private const val REQUEST_DEADLINE_MS = 20_000L
+private const val MAX_KEY_LENGTH = 2048
 
 class TooManyWrongCodesException : Exception("Too many wrong addresses were tried.")
 
@@ -26,11 +29,12 @@ class TooManyWrongCodesException : Exception("Too many wrong addresses were trie
  *
  * The page lives under a random 4-digit path, which works as a one-time code: requests for any
  * other path count as wrong guesses, and the server gives up after [MAX_WRONG_CODES] of them.
- * It only runs while the "Send from computer" screen is open.
+ * It only runs while the "Send from computer" screen is open, and only listens on [bindAddress]
+ * (the Wi-Fi address shown to the user), not on mobile data.
  */
-class KeyReceiver {
+class KeyReceiver(bindAddress: InetAddress, preferredPort: Int = PREFERRED_PORT) {
     val code: String = (SecureRandom().nextInt(9000) + 1000).toString()
-    private val server = runCatching { ServerSocket(PREFERRED_PORT) }.getOrElse { ServerSocket(0) }
+    private val server = runCatching { ServerSocket(preferredPort, 4, bindAddress) }.getOrElse { ServerSocket(0, 4, bindAddress) }
     val port: Int = server.localPort
     private var wrongCodes = 0
 
@@ -51,8 +55,10 @@ class KeyReceiver {
     fun close() = runCatching { server.close() }
 
     private fun handle(socket: Socket): String? {
+        // soTimeout limits each read; the deadline stops a client trickling bytes to hold the server.
+        val deadline = System.currentTimeMillis() + REQUEST_DEADLINE_MS
         val input = BufferedInputStream(socket.getInputStream())
-        val head = readHead(input) ?: return null
+        val head = readHead(input, deadline) ?: return null
         val lines = head.split("\r\n")
         val (method, rawPath) = lines.first().split(" ").takeIf { it.size >= 2 } ?: return null
         val path = rawPath.substringBefore('?').trimEnd('/')
@@ -80,10 +86,13 @@ class KeyReceiver {
                     respond(socket, 413, page("Too long", "<p>That doesn't look like an API key.</p>"))
                     return null
                 }
-                val body = readBody(input, length) ?: return null
+                val body = readBody(input, length, deadline) ?: return null
                 val key = formField(body, "key")?.let(::cleanKey)
                 if (key.isNullOrEmpty()) {
                     respond(socket, 200, FORM_PAGE)
+                    null
+                } else if (!isPlausibleKey(key)) {
+                    respond(socket, 200, page("Send API key", "<p>That doesn't look like an API key. Copy it again and paste it below.</p>$FORM"))
                     null
                 } else {
                     respond(socket, 200, page("Key sent", "<p>Your API key is on your Light Phone. You can close this page.</p>"))
@@ -98,11 +107,12 @@ class KeyReceiver {
     }
 
     /** Reads up to the blank line that ends the request headers. */
-    private fun readHead(input: InputStream): String? {
+    private fun readHead(input: InputStream, deadline: Long): String? {
         val buffer = ByteArrayOutputStream()
         var matched = 0
         val terminator = "\r\n\r\n"
         while (buffer.size() < MAX_HEADER_BYTES) {
+            if (System.currentTimeMillis() > deadline) return null
             val b = input.read()
             if (b < 0) return null
             buffer.write(b)
@@ -112,10 +122,11 @@ class KeyReceiver {
         return null
     }
 
-    private fun readBody(input: InputStream, length: Int): String? {
+    private fun readBody(input: InputStream, length: Int, deadline: Long): String? {
         val bytes = ByteArray(length)
         var read = 0
         while (read < length) {
+            if (System.currentTimeMillis() > deadline) return null
             val n = input.read(bytes, read, length - read)
             if (n < 0) return null
             read += n
@@ -135,6 +146,7 @@ class KeyReceiver {
             "Content-Type: text/html; charset=utf-8\r\n" +
             "Content-Length: ${body.size}\r\n" +
             "Cache-Control: no-store\r\n" +
+            "Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'\r\n" +
             "Referrer-Policy: no-referrer\r\n" +
             "Connection: close\r\n\r\n"
         socket.getOutputStream().apply {
@@ -164,6 +176,10 @@ class KeyReceiver {
                 .let { if (it.startsWith("apikey ", ignoreCase = true)) it.substring(7) else it }
                 .filterNot(Char::isWhitespace)
 
+        /** Keys are printable ASCII (TfNSW's are JWT-like); anything else can't go in a header anyway. */
+        fun isPlausibleKey(key: String): Boolean =
+            key.length in 8..MAX_KEY_LENGTH && key.all { it.code in 0x21..0x7e }
+
         private fun formField(body: String, name: String): String? =
             body.split('&')
                 .map { it.split('=', limit = 2) }
@@ -187,15 +203,16 @@ class KeyReceiver {
             <body><h1>$title</h1>$content</body></html>
         """.trimIndent()
 
-        private val FORM_PAGE = page(
-            "Send API key",
-            """
-            <p>Paste your Transport for NSW API key below. It goes straight to your Light Phone on this network.</p>
+        private val FORM = """
             <form method="post">
               <textarea name="key" autofocus required autocomplete="off" spellcheck="false" placeholder="eyJhbGciOi…"></textarea>
               <button type="submit">Send to phone</button>
             </form>
-            """.trimIndent(),
+        """.trimIndent()
+
+        private val FORM_PAGE = page(
+            "Send API key",
+            "<p>Paste your Transport for NSW API key below. It goes straight to your Light Phone on this network.</p>\n$FORM",
         )
     }
 }

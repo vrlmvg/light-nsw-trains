@@ -60,7 +60,7 @@ class SettingsViewModel(private val store: TrainsStore) : LightViewModel<Unit>()
 
     /** Saves the key, then makes one cheap request to confirm Transport for NSW accepts it. */
     fun saveKey(raw: CharSequence) {
-        val key = raw.toString().trim()
+        val key = KeyReceiver.cleanKey(raw.toString())
         if (key.isEmpty()) {
             _ui.update { it.copy(editingKey = false) }
             return

@@ -19,6 +19,7 @@ import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import java.net.InetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,7 +47,7 @@ class WifiKeyViewModel : LightViewModel<String>() {
                 _ui.value = WifiKeyUi.Failed("Connect your phone to Wi-Fi first, then try again.")
                 return@launch
             }
-            val started = runCatching { withContext(Dispatchers.IO) { KeyReceiver() } }
+            val started = runCatching { withContext(Dispatchers.IO) { KeyReceiver(InetAddress.getByName(address)) } }
             val server = started.getOrElse {
                 _ui.value = WifiKeyUi.Failed("Couldn't start receiving. Try again.")
                 return@launch
